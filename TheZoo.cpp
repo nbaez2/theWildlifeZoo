@@ -1,6 +1,28 @@
 #include <iostream>
 #include <jni.h>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <sstream>
+
+#include "animal.h"
+
+#include "oviparous.h"
+#include "mammal.h"
+
+#include "crocodile.h"
+#include "goose.h"
+#include "pelican.h"
+
+#include "bat.h"
+#include "whale.h"
+#include "sealion.h"
+
 using namespace std;
+
+
+vector<Animal*> animalData; 
+
 
 void GenerateData()               //DO NOT TOUCH CODE IN THIS METHOD
 {
@@ -47,43 +69,237 @@ void GenerateData()               //DO NOT TOUCH CODE IN THIS METHOD
      cin.get();
 }
 
-void AddAnimal()
+string padLeft(string str, int leng, string stringpadVal) {
+    for (int i = str.length(); i <= leng; i++){
+        str = str + stringpadVal;
+    }
+    return str;
+}
+
+string padRight(string str, int leng, string stringpadVal) {
+    for (int i = str.length(); i <= leng; i++)
+        str = str + stringpadVal;
+    return str;
+}   
+
+void addDataToVector(string tNumber, string animalName, string animalType, string animalSubType, int eggs, int nurse){
+    Animal *animal; // animal pointer
+    if(animalSubType == "Crocodile") {
+        Crocodile *c = new Crocodile(tNumber, animalName, animalType, eggs, animalSubType);
+        animal = c;
+    }
+    else if(animalType == "Goose") {
+        Goose *g = new Goose(tNumber, animalName, animalType, eggs, animalSubType);
+        animal = g;
+    }
+    else if(animalType == "Pelican") {
+        Pelican *p = new Pelican(tNumber, animalName, animalType, eggs, animalSubType);
+        animal = p;
+    }
+    else if(animalType == "Bat") {
+        Bat *b = new Bat(tNumber, animalName, animalType, nurse, animalSubType);
+        animal = b;
+    }
+    else if(animalType == "Whale") {
+        Whale *w = new Whale(tNumber, animalName, animalType, nurse, animalSubType);
+        animal = w;
+    }
+    else {
+        SeaLion *s = new SeaLion(tNumber, animalName, animalType, nurse, animalSubType);
+        animal = s;
+    }
+
+    animalData.push_back(animal);//a[0] = 2;
+}
+
+void AddAnimal() // The following lines of code ask for user input. 
 {
-     /*
-            TODO: Write proper code to add an animal to your vector (or array)
-     */
+    cout << "Add Animal data" << endl;
+    
+    cout  << "What is the tracking number" << endl;
+    string tNumber;
+    cin >> tNumber;
+
+    cout << "What is the name" << endl;
+    string animalName;
+    cin >> animalName;
+
+    cout << "What is the type" << endl;
+    string animalType;
+    cin >> animalType;
+
+    cout << "What is the subType" << endl;
+    string animalSubType;
+    cin >> animalSubType;
+
+    cout << "Number of eggs" << endl;
+    int eggs;
+    cin >> eggs;
+
+    cout << "Require nursing or not, 1 for yes and 0 for no" << endl;
+    int nurse;
+    cin >> nurse;
+
+    cout << "Add new animal? 1 for confirm and 0 for cancel" << endl;
+    int confirm;
+    cin >> confirm;
+
+    if(confirm){
+        addDataToVector(tNumber, animalName, animalType, animalSubType, eggs, nurse);
+        cout << "New animal added";
+    } else {
+        cout << "Animal discarded";
+    }
 }
 
 
 void RemoveAnimal()
 {
-     /*
-            TODO: Write proper code to remove an animal from your vector (or array. Remmber to re-allocate proper size if using array)
-     */
+    cout << "Removing Animal data" << endl;
+    cout << "What is the tracking number" << endl;
+    string tNumber;
+    cin >> tNumber;
+
+    int elementPosition = -1;
+    for(int i = 0; i < animalData.size(); i++) {
+        if(animalData[i]->getTrackNumber().compare(tNumber) == 0) {
+            //[10,20,50,40,30] -> 40
+            elementPosition = i; // 4
+            break;
+        }
+    }
+
+    if(elementPosition != -1) { 
+        animalData.erase(animalData.begin() + elementPosition);
+        cout << "Animal removed";
+    } else {
+        cout << "Animal not found, hence cant be removed";
+    }
+
 }
 
 void LoadDataFromFile()
 {
-     /*
-            TODO: Write proper code to load data from input file (generated using JNI) into vector/array.
-     */
+    cout << "Loading Animal data from zoodata.txt" << endl;
+    ifstream inputFile("zoodata.txt"); // file handler
+    string line; 
+    while (getline(inputFile, line)) {
+        //line = "0012345 asdfghjk         Oviparous        Crocodile        5 0"
+        // ["0012345", "asdfghjk", "Oviparous", "Crocodile", "5", "0"]
+        istringstream ss(line); // breaking lines into words
+        int fieldCnt = 0;
+
+        string tNumber;
+        string animalName;
+        string animalType;
+        string animalSubType;
+        int eggs;
+        int nurse;
+
+        do { 
+            if(fieldCnt % 6 == 0) {
+                ss >> tNumber; //0012345
+            }
+            else if(fieldCnt % 6 == 1) {
+                ss >> animalName; //asdfghjk
+            }
+            else if(fieldCnt % 6 == 2) {
+                ss >> animalType; //Oviparous
+            }
+            else if(fieldCnt % 6 == 3) {
+                ss >> animalSubType; //Crocodile
+            }
+            else if(fieldCnt % 6 == 4) {
+                ss >> eggs; //5
+            }
+            else {
+                ss >> nurse; // 0 
+
+                //cout << tNumber << " " << animalName << " " << animalType << " " << animalSubType << " " << eggs << " " << nurse << endl;
+                addDataToVector(tNumber, animalName, animalType, animalSubType, eggs, nurse);
+            }
+
+            fieldCnt++; //1
+        } while (ss); 
+    }
+
+    cout << "Loading Data complete!!" << endl;
+
 }
 
 void SaveDataToFile()
 {
-     /*
-            TODO: Write proper code to store vector/array to file.
-     */
+    cout << "Saving Animal data" << endl;
+    string fileNameToSave;
+    cout << "Enter file name to save data";
+    cin >> fileNameToSave;
+
+    ofstream outputFile(fileNameToSave); // output to file
+    if(outputFile.is_open()) { // create the file
+        for(int i = 0; i < animalData.size(); i++) {
+            outputFile << (animalData[i]->getTrackNumber() + " " + animalData[i]->getName() + " " +   animalData[i]->getType() + " " +   
+             animalData[i]->getSubType() + " " + to_string(animalData[i]->getNumberOfEggs()) + " " +  to_string(animalData[i]->getNurse())) << endl;
+        }
+        outputFile.close();
+    }
+}
+
+void DisplayAnimal() {
+    cout << "Displaying Animal data" << endl;
+    /*
+    int i = 0;
+    while(i < animalData.size()) {
+        //cout << animalData[i]->getTrackNumber() << " " << animalData[i]->getName() << " " << animalData[i]->getType() << " " <<   
+         animalData[i]->getSubType() << " " <<    animalData[i]->getNumberOfEggs() << " " <<    animalData[i]->getNurse() << " " <<  endl; 
+        i++;
+    }
+    */
+    for(int i = 0; i < animalData.size(); i++) { //a = [1,2,3,4,5]
+        //a[0] = 1, a[1] = 2
+        cout << animalData[i]->getTrackNumber() << " " << animalData[i]->getName() << " " << animalData[i]->getType() << " " <<   
+         animalData[i]->getSubType() << " " <<    animalData[i]->getNumberOfEggs() << " " <<    animalData[i]->getNurse() << " " <<  endl; 
+    }
 }
 
 void DisplayMenu()
 {
-     /*
-            TODO: write proper code to display menu to user to select from
-     */
+    int continueDisplayingMenu = 1;
+
+    while(continueDisplayingMenu) { // whle(0)
+        cout << "*********************************" << endl;// "\n" is cleaner but endl is faster respectfully
+        cout << "1. Load Animal Data" << endl;
+        cout << "2. Generate Data" << endl;
+        cout << "3. Display Animal Data" << endl;
+        cout << "4. Add Record" << endl;
+        cout << "5. Delete Record" << endl;
+        cout << "6. Save Animal Data" << endl;
+        cout << "*********************************" << endl;
+
+        cout << "Choose option: " << endl;
+        int option = -1;
+        cin >> option;
+
+        switch(option) { // Switch for Menu Display
+            case 1: LoadDataFromFile();
+            break;
+            case 2: GenerateData(); // creating zoodata.txt using java
+            break;
+            case 3: DisplayAnimal(); // show whatever in vector
+            break;
+            case 4: AddAnimal();
+            break;
+            case 5: RemoveAnimal();
+            break;
+            case 6: SaveDataToFile();
+            break;
+
+        }
+
+        cout << "Do you want to continue? 1 for yes, 0 for no" << endl;
+        cin >> continueDisplayingMenu; //continueDisplayingMenu = 0
+    }
+
 }
-
-
 
 int main()
 {
